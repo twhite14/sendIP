@@ -1,13 +1,14 @@
-#sendIP v1.1
+#sendIP v1.2
 #Periodically executed using Windows Task Scheduler. If the local IP address of this PC has changed since last run, email it to the specified address.
 #This comes in handy when your IP is subject to change without warning.
 
 import socket                           #To obtain local IP
 import smtplib                          #To send email 
 from email.mime.text import MIMEText    #To format email
+from sendIP_accounts import *           #sourceAddress, sourcePassword, destinationAddress
 
-#Make sure the file exists. Really only needed for first run.
-directory = 'C:/Python27/Scripts/'
+#Make sure the log file exists. Really only needed for first run.
+directory = './'
 try:
   lastMSG = open(directory + 'last.txt', 'r')
 except IOError:
@@ -31,31 +32,28 @@ lastMSGTxt = lastMSG.read()
 
 #Compare, send message if needed. Close files.
 if(lastMSGTxt != content):
+  #Write the new data to the log file.
   lastMSG.close()
   lastMSG = open('last.txt', 'w')
   lastMSG.write(content)
   lastMSG.close()
-  
-  #Define who sends and receives the mail
-  gmailUsername = 'REDACTED'
-  gmailPassword = 'REDACTED'
-  recipient = 'REDACTED'
 
   #Create an email message
   msg = MIMEText(content)
   msg['Subject'] = 'New IP Address for '+ pcName
-  msg['From'] = gmailUsername
-  msg['To'] = recipient
+  msg['From'] = sourceAddress
+  msg['To'] = destinationAddress
 
   #Connect to the SMTP server
+  #This section will change depending on your email provider. I use gmail.
   mail = smtplib.SMTP('smtp.gmail.com', 587)
   #Server handshakes
   mail.ehlo()
   mail.starttls()
 
   #Send the message
-  mail.login(gmailUsername, gmailPassword)
-  mail.sendmail(gmailUsername, recipient, msg.as_string())
+  mail.login(sourceAddress, sourcePassword)
+  mail.sendmail(sourceAddress, destinationAddress, msg.as_string())
   mail.quit
 else:
   lastMSG.close()
